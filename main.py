@@ -23,7 +23,7 @@ read_messages = True
 
 
 # Serial setup
-ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-10', 9600, timeout=1)
 halted = False
 
 def end_game(player_wins: bool):

@@ -48,6 +48,7 @@ public:
         timer.pause();
         timer.expire();
         finished = true;
+        Serial.println("FAIL");
       }
     }
   }
@@ -85,8 +86,11 @@ void loop() {
     lKnife.update();
     rKnife.update();
     countdown.update();
-  } else {
-    Serial.println("OH NO THE NUCLEAR BOMBS BJUFDOGIPNFDSOBUFSINEPHFBDOU JLSAODBFHG HAHJSLBF KSDF");
-    exit(0);
+  } 
+
+  if (Serial.available() > 0) {
+    String incomingData = Serial.readStringUntil('\n');
+    Serial.println(incomingData);
   }
 }
+ 
