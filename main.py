@@ -6,6 +6,9 @@ import sys
 import json
 import time
 import termios
+import serial
+import threading
+import requests
 
 # import pygame without the welcome message
 with open(os.devnull, 'w') as f:
@@ -15,13 +18,50 @@ with open(os.devnull, 'w') as f:
     sys.stdout = old_stdout
 load_dotenv()
 
-client = openai.OpenAI()
-
 # PARAMETERS
 read_messages = True
 
+
+# Serial setup
+ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+halted = False
+
+def end_game(player_wins: bool):
+    halted = True
+    current_time = time.time()
+    log += f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
+    f = open(f"transcript-{current_time}.txt", "w")
+    f.write(log)
+    url = 'https://bin.birdflop.com/documents'
+
+    payload = {
+        'data': log,
+        'hide_ips': 'false'
+    }
+
+    req = requests.post(url,data=payload)
+    key = json.loads(req.text)['key']
+    log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
+    print(f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+
+    
+    
+def check_serial():
+    if ser.in_waiting > 0:
+        line = ser.readline().decode('utf-8').rstrip()
+        if line == "STOP":
+            end_game(True)
+    return None
+
+def send_to_esp32(score: int):
+    # Send this boolean value to ESP32
+    ser.write(f"{str(score)}\n".encode())
+
+client = openai.OpenAI()
+
 #defaults, do not change
 accepting_input = False
+log = ""
 
 def convert_to_speech(text_input: str):
     speech_file_path = Path(__file__).parent / "speech.mp3"
@@ -47,6 +87,7 @@ messages = [
 ]
 
 def generate_message(user_input: str):
+    log += f"Peter Scottsen: {user_input}\n"
     messages.append({"role": "user", "content": user_input})
     completion = client.chat.completions.create(
         model="gpt-4-1106-preview",
@@ -60,6 +101,7 @@ def generate_message(user_input: str):
     # Now, you can access the message and the score like this
     message = content_json['message']
     score = content_json['score']
+    log += f"AI: {message} (Score: {score})\n"
     print(f"AI: {message}")
     if read_messages:
         convert_to_speech(message)
@@ -67,22 +109,24 @@ def generate_message(user_input: str):
     return score
 
 def main_loop():
+    esp32_thread = threading.Thread(target=check_serial)
+    esp32_thread.daemon = True
+    esp32_thread.start()
+
     # Get the start time
     # Set the duration for the loop to run (10 minutes)
-    duration = 1 * 60  # 10 minutes in seconds
+    duration = 10 * 60  # 10 minutes in seconds
     
     user_input = input("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
-    currently_generating = True
+    log += "Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes. (Score: 0)\n"
     score = generate_message(user_input)
     start_time = time.time()
-    currently_generating = False
     # Run the loop until the time elapsed is less than the duration
-    while (time.time() - start_time) < duration:
+    while (time.time() - start_time) < duration and not halted:
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
         user_input = input("Peter Scottsen: ")
-        currently_generating = True
-        generate_message(user_input)
-        currently_generating = False
+        score = generate_message(user_input)
+        send_to_esp32(score)
         time.sleep(0.01)
 
     # After 10 minutes have passed, the loop will exit
