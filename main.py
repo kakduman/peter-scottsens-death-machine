@@ -47,14 +47,14 @@ def end_game(player_wins: bool):
     
     
 def check_serial():
-    if ser.in_waiting > 0:
-        line = ser.readline().decode('utf-8').rstrip()
-        if line == "STOP":
-            end_game(True)
-    return None
+    while True:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode('utf-8').rstrip()
+            print(line)
+            if line == "STOP":
+                end_game(True)
 
 def send_to_esp32(score: int):
-    # Send this boolean value to ESP32
     ser.write(f"{str(score)}\n".encode())
 
 client = openai.OpenAI()
@@ -87,6 +87,7 @@ messages = [
 ]
 
 def generate_message(user_input: str):
+    global log
     log += f"Peter Scottsen: {user_input}\n"
     messages.append({"role": "user", "content": user_input})
     completion = client.chat.completions.create(
@@ -109,6 +110,7 @@ def generate_message(user_input: str):
     return score
 
 def main_loop():
+    global log
     esp32_thread = threading.Thread(target=check_serial)
     esp32_thread.daemon = True
     esp32_thread.start()
@@ -132,4 +134,5 @@ def main_loop():
     # After 10 minutes have passed, the loop will exit
     print("Your time is up, Peter Scottsen. I've cracked the nuclear launch codes. Goodbye.")
     
-main_loop()
+if __name__ == "__main__":
+    main_loop()

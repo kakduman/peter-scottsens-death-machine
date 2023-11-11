@@ -44,6 +44,7 @@ public:
   void update() {
     if (timer.periodic(moveIncrement)) {
       servo.write(position--);
+
       if (position <= endPosition) {
         timer.pause();
         timer.expire();
@@ -77,6 +78,8 @@ Knife rKnife(KNIFE_R_PIN, 5000, 200, 180);
 
 Countdown countdown(COUNTDOWN_PIN, 60000);
 
+int score = 0;
+
 void setup() {
   Serial.begin(9600);
 }
@@ -91,6 +94,7 @@ void loop() {
   if (Serial.available() > 0) {
     String incomingData = Serial.readStringUntil('\n');
     Serial.println(incomingData);
+    score = incomingData.toInt();
   }
 }
  
