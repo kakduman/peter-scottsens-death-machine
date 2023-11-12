@@ -79,7 +79,8 @@ public:
   }
 
   bool switchInitiated() {
-    if (touchRead(touchPin) < 50 && !prevSwitchStatus) {
+    Serial.println(touchRead(touchPin));
+    if (touchRead(touchPin) < 40 && !prevSwitchStatus) {
       prevSwitchStatus = true;
       return true;
     }
