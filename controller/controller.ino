@@ -5,7 +5,7 @@
 
 class Knife {
 public:
-  Knife(int pin, int retractedDuration, int extendedDuration, int startAngle) : retractedDuration(retractedDuration), extendedDuration(extendedDuration), startAngle(startAngle) {
+  Knife(int pin, int retractedDuration, int extendedDuration, int startAngle, int endAngle) : retractedDuration(retractedDuration), extendedDuration(extendedDuration), startAngle(startAngle), endAngle(endAngle) {
     knifeServo.attach(pin);
     knifeServo.write(startAngle); 
     knifeTimer.start(retractedDuration);
@@ -32,6 +32,7 @@ private:
     int retractedDuration;
     int extendedDuration;
     int startAngle;
+    int endAngle;
 };
 
 class Countdown {
@@ -131,8 +132,8 @@ private:
 #define IN4 32
 #define SWITCH_PIN 15
 
-Knife lKnife(KNIFE_L_PIN, 3000, 200, 5);
-Knife rKnife(KNIFE_R_PIN, 5000, 200, 180);
+Knife lKnife(KNIFE_L_PIN, 3000, 200, 178, 110);
+Knife rKnife(KNIFE_R_PIN, 5000, 200, 0, 70);
 FingerSwitch fingerSwitch(SWITCH_PIN, 3000);
 Countdown countdown(COUNTDOWN_PIN, 60000);
 Stepper myStepper(2048, IN1, IN3, IN2, IN4);
@@ -142,7 +143,6 @@ bool gameEnd = false;
 
 bool handleSwitch() {
   if (score < 100) {
-    int switch_status = touchRead(15);
     if (fingerSwitch.switchInitiated()) {
       Serial.println("triggered");
       myStepper.step(-64);
