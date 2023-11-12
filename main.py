@@ -46,7 +46,7 @@ def end_game(player_wins: bool):
         log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
         f = open(f"transcript-{current_time}.txt", "w")
         f.write(log)
-        print(f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+        print(f"\nCongrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
     else:
         log += f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
         url = 'https://bin.birdflop.com/documents'
@@ -61,7 +61,7 @@ def end_game(player_wins: bool):
         log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
         f = open(f"transcript-{current_time}.txt", "w")
         f.write(log)
-        print(f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+        print(f"\nToo late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
     time.sleep(10)
     game_wait_message()
     status = ""
