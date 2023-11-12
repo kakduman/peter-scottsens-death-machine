@@ -139,7 +139,7 @@ private:
 Knife lKnife(KNIFE_L_PIN, 3000, 200, 178, 110);
 Knife rKnife(KNIFE_R_PIN, 5000, 200, 0, 70);
 FingerSwitch fingerSwitch(SWITCH_PIN, 3000);
-Countdown countdown(COUNTDOWN_PIN, 300000);
+Countdown countdown(COUNTDOWN_PIN, 20000);
 Stepper myStepper(2048, IN1, IN3, IN2, IN4);
 
 int score = 100;
