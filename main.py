@@ -31,6 +31,7 @@ def end_game(player_wins: bool):
     global status
     halted = True
     current_time = time.time()
+    print(player_wins)
     if player_wins:
         log += f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
         f = open(f"transcript-{current_time}.txt", "w")
