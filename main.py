@@ -29,13 +29,11 @@ halted = False
 def end_game(player_wins: bool):
     global halted
     global status
+    global log
     halted = True
     current_time = time.time()
-    print(player_wins)
     if player_wins:
         log += f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
-        f = open(f"transcript-{current_time}.txt", "w")
-        f.write(log)
         url = 'https://bin.birdflop.com/documents'
 
         payload = {
@@ -46,11 +44,11 @@ def end_game(player_wins: bool):
         req = requests.post(url,data=payload)
         key = json.loads(req.text)['key']
         log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
+        f = open(f"transcript-{current_time}.txt", "w")
+        f.write(log)
         print(f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
     else:
         log += f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
-        f = open(f"transcript-{current_time}.txt", "w")
-        f.write(log)
         url = 'https://bin.birdflop.com/documents'
 
         payload = {
@@ -61,7 +59,9 @@ def end_game(player_wins: bool):
         req = requests.post(url,data=payload)
         key = json.loads(req.text)['key']
         log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
-        print(f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction.!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+        f = open(f"transcript-{current_time}.txt", "w")
+        f.write(log)
+        print(f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
     time.sleep(10)
     game_wait_message()
     status = ""
@@ -76,7 +76,6 @@ def check_serial():
         if ser.in_waiting > 0:
             try:
                 line = ser.readline().decode('utf-8').rstrip()
-                print(line)
                 if line == "WIN":
                     status = "WIN"
                     end_game(True)
@@ -117,7 +116,7 @@ def convert_to_speech(text_input: str):
         pygame.time.Clock().tick(10)
 
 messages = [
-    {"role": "system", "content": "Peter Scottsen, an exiled war criminal, re-encounters his AI system whose goal is to kill everyone. Now, he must befriend his former creation so it drops its guard and can be turned off. You are this AI system. Peter Scottsen will send you messages so that you slowly befriend him. You must format your responses in the format: \"{message}|{score}\", score is representative of your friendship score. Example: Hello, I am a rogue AI system.|10 . Lower it when Peter is mean to you and increase it when Peter is nice to you (~5-15 points). Lower and increase it according to how nice/mean Peter's message is. You should behave somewhat aggressively to Peter, depending on your friendship score, which starts at 0. Try to keep the conversation engaging, and ask questions. Your responses should be coherent"},
+    {"role": "system", "content": "Peter Scottsen, an exiled war criminal, re-encounters his AI system whose goal is to kill everyone. Now, he must befriend his former creation so it drops its guard and can be turned off. You are this AI system, \"Sir Stabby\", but you get mad if people call you that because you go by \"Sir Stabs-a-lot\". Peter Scottsen will send you messages so that you slowly befriend him. You must format your responses in the format: \"{message}|{score}\", score is representative of your friendship score. Example: Hello, I am a rogue AI system.|10 . Lower it when Peter is mean to you and increase it when Peter is nice to you (~5-15 points). Lower and increase it according to how nice/mean Peter's message is. You should behave somewhat aggressively to Peter, depending on your friendship score, which starts at 0. Try to keep the conversation engaging, and ask questions. Your responses should be coherent"},
 ]
 
 messages_2 = [
@@ -147,9 +146,7 @@ def generate_message(user_input: str):
         messages=messages_2
     )
     content_obj = completion.choices[0].message.content
-    print(content_obj)
     messages.append({"role": "assistant", "content": content_obj})
-    print(messages)
     message = content_obj.split("|")[0]
     score = int(content_obj.split("|")[1])
         
@@ -162,11 +159,10 @@ def generate_message(user_input: str):
     print(f"AI: {message}")
     if read_messages:
         convert_to_speech(message)
-    print(score)
     return score
 
 def game_wait_message():
-    print("Hold the silver plate for three seconds to awaken Sir Stabby")
+    print("Hold the silver plate for three seconds to awaken Sir Stabby", flush=True)
 
 def main_loop():
     global log
@@ -188,7 +184,7 @@ def main_loop():
                 score = generate_message(user_input)
                 send_to_esp32(score)
                 time.sleep(0.01)
-            print("Hold the power button to restart the game.")
+            print("Hold the power button to restart the game.", flush=True)
             log = []
             halted = False
         elif status == "WIN":
