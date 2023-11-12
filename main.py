@@ -67,12 +67,17 @@ def end_game(player_wins: bool):
 def check_serial():
     while True:
         if ser.in_waiting > 0:
-            line = ser.readline().decode('utf-8').rstrip()
-            print(line)
-            if line == "WIN":
-                end_game(True)
-            elif line == "LOSS":
-                end_game(False)
+            try:
+                line = ser.readline().decode('utf-8').rstrip()
+                print(line)
+                if line == "WIN":
+                    end_game(True)
+                elif line == "LOSS":
+                    end_game(False)
+                elif line == "START":
+                    main_loop()
+            except:
+                pass
 
 def send_to_esp32(score: int):
     ser.write(f"{str(score)}\n".encode())
@@ -154,10 +159,6 @@ def generate_message(user_input: str):
 def main_loop():
     global log
     global halted
-    esp32_thread = threading.Thread(target=check_serial)
-    esp32_thread.daemon = True
-    esp32_thread.start()
-
     # Get the start time
     # Set the duration for the loop to run (10 minutes)
     print("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
@@ -170,8 +171,11 @@ def main_loop():
         score = generate_message(user_input)
         send_to_esp32(score)
         time.sleep(0.01)
-    user_input = input("Type anything to restart: ")
-    main_loop()
+    print("Hold the power button to restart the game.")
+    log = []
+    halted = False
     
 if __name__ == "__main__":
-    main_loop()
+    esp32_thread = threading.Thread(target=check_serial)
+    esp32_thread.daemon = True
+    esp32_thread.start()
