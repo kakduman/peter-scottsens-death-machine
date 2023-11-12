@@ -28,6 +28,7 @@ halted = False
 
 def end_game(player_wins: bool):
     global halted
+    global status
     halted = True
     current_time = time.time()
     if player_wins:
@@ -60,22 +61,29 @@ def end_game(player_wins: bool):
         key = json.loads(req.text)['key']
         log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
         print(f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction.!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+    time.sleep(10)
+    game_wait_message()
+    status = ""
 
 
     
     
 def check_serial():
+    global status
+    status = ""
     while True:
         if ser.in_waiting > 0:
             try:
                 line = ser.readline().decode('utf-8').rstrip()
                 print(line)
                 if line == "WIN":
+                    status = "WIN"
                     end_game(True)
                 elif line == "LOSS":
+                    status = "LOSS"
                     end_game(False)
                 elif line == "START":
-                    main_loop()
+                    status = "START"
             except:
                 pass
 
@@ -156,26 +164,40 @@ def generate_message(user_input: str):
     print(score)
     return score
 
+def game_wait_message():
+    print("Hold the silver plate for three seconds to awaken Sir Stabby")
+
 def main_loop():
     global log
     global halted
-    # Get the start time
-    # Set the duration for the loop to run (10 minutes)
-    print("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
-    user_input = input("Peter Scottsen: ")
-    log += "Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes. (Score: 0)\n"
-    score = generate_message(user_input)
-    while not halted:
-        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
-        user_input = input("Peter Scottsen: ")
-        score = generate_message(user_input)
-        send_to_esp32(score)
-        time.sleep(0.01)
-    print("Hold the power button to restart the game.")
-    log = []
-    halted = False
+    global status
+    status = ""
+
+    game_wait_message()
+
+    while True:
+        if status == "START":
+            print("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
+            user_input = input("Peter Scottsen: ")
+            log += "Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes. (Score: 0)\n"
+            score = generate_message(user_input)
+            while not halted:
+                termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+                user_input = input("Peter Scottsen: ")
+                score = generate_message(user_input)
+                send_to_esp32(score)
+                time.sleep(0.01)
+            print("Hold the power button to restart the game.")
+            log = []
+            halted = False
+        elif status == "WIN":
+            pass
+        elif status == "LOSS":
+            pass
+
     
 if __name__ == "__main__":
     esp32_thread = threading.Thread(target=check_serial)
     esp32_thread.daemon = True
     esp32_thread.start()
+    main_loop()

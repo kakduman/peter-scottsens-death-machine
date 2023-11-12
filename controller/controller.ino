@@ -67,7 +67,6 @@ public:
         timer.pause();
         timer.expire();
         finished = true;
-        Serial.println("FAIL");
       }
     }
   }
@@ -114,18 +113,15 @@ public:
     int switchStatus = touchRead(touchPin);
     if (switchInitiated()) {
       timer.start(touchDuration);
-      Serial.println("started");
       prevSwitchStatus = true;
     }
     if (switchStatus >= TOUCH_CUTOFF && prevSwitchStatus) {
       timer.pause();
-      Serial.println("paused");
       prevSwitchStatus = false;
     }
     if (timer.time_over()) {
       timer.start(touchDuration);
       timer.pause();
-      Serial.println("3 seconds");
       return true;
     }
     return false;
@@ -179,11 +175,11 @@ void loop() {
   if (!gameEnd) {
     if (!handleSwitch()) {
       if (countdown.isFinished()) {
-        Serial.println("FAIL");
+        Serial.println("LOSS");
         gameEnd = true;
       }
       if (fingerSwitch.switchHeld() && score >= 100) {
-        Serial.println("STOP");
+        Serial.println("WIN");
         gameEnd = true;
       }
       lKnife.update();
