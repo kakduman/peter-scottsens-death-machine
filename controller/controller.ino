@@ -11,33 +11,33 @@
 #define IN4 32
 #define SWITCH_PIN 15
 
-#define TOUCH_CUTOFF 42
+#define TOUCH_CUTOFF 46
 
 class Knife {
 public:
   Knife(int pin, int retractedDuration, int extendedDuration, int startAngle, int endAngle) : retractedDuration(retractedDuration), extendedDuration(extendedDuration), startAngle(startAngle), endAngle(endAngle) {
-    knifeServo.attach(pin);
-    knifeServo.write(startAngle); 
-    knifeTimer.start(retractedDuration);
+    servo.attach(pin);
+    servo.write(startAngle); 
+    timer.start(retractedDuration);
   }
 
   void update() {
-    if (knifeTimer.time_over()) {
+    if (timer.time_over()) {
       if (extended) {
-        knifeTimer.start(retractedDuration);
+        timer.start(retractedDuration);
         extended = false;
-        knifeServo.write(startAngle); 
+        servo.write(startAngle); 
       } else {
-        knifeTimer.start(extendedDuration);
+        timer.start(extendedDuration);
         extended = true;
-        knifeServo.write(90); 
+        servo.write(90); 
       }
     }
   }
 
 private:
-    Servo knifeServo;
-    Timeout knifeTimer;
+    Servo servo;
+    Timeout timer;
     bool extended = false;
     int retractedDuration;
     int extendedDuration;
@@ -49,9 +49,14 @@ class Countdown {
 public: 
   Countdown(int pin, int totalTime) : totalTime(totalTime) {
     servo.attach(pin);
-    servo.write(position); 
+    initialize();
     moveIncrement = (int) (totalTime / 180);
+  }
 
+  void initialize() {
+    finished = false;
+    position = 180;
+    servo.write(position); 
   }
 
   void update() {
@@ -77,7 +82,7 @@ public:
     int totalTime;
     int moveIncrement;
     int position = 180;
-    int endPosition = 0;
+    const int endPosition = 0;
     bool finished = false;
 };
 
@@ -85,12 +90,11 @@ class FingerSwitch {
 public:
   FingerSwitch(int touchPin, int touchDuration): touchPin(touchPin), touchDuration(touchDuration) {
     pinMode(touchPin, INPUT_PULLUP);
-    timer.start(5000);
+    timer.start(touchDuration);
     timer.pause();
   }
 
   bool switchInitiated() {
-    Serial.println(touchRead(touchPin));
     if (touchRead(touchPin) < TOUCH_CUTOFF && !prevSwitchStatus) {
       prevSwitchStatus = true;
       return true;
@@ -108,8 +112,8 @@ public:
 
   bool switchHeld() {
     int switchStatus = touchRead(touchPin);
-    if (switchStatus < TOUCH_CUTOFF && !prevSwitchStatus) {
-      timer.start(5000);
+    if (switchInitiated()) {
+      timer.start(touchDuration);
       Serial.println("started");
       prevSwitchStatus = true;
     }
@@ -142,8 +146,8 @@ FingerSwitch fingerSwitch(SWITCH_PIN, 3000);
 Countdown countdown(COUNTDOWN_PIN, 60000);
 Stepper myStepper(2048, IN1, IN3, IN2, IN4);
 
-int score = 0;
-bool gameEnd = false;
+int score = 100;
+bool gameEnd = true;
 
 bool handleSwitch() {
   if (score < 100) {
@@ -158,24 +162,37 @@ bool handleSwitch() {
   return false;
 }
 
+void initializeGame() {
+  score = 0;
+  gameEnd = false;
+  countdown.initialize();
+  Serial.println("START");
+}
+
 void setup() {
   myStepper.setSpeed(15);
   Serial.begin(9600);
-  myStepper.step(64);
+  myStepper.step(32);
 }
 
 void loop() {
   if (!gameEnd) {
     if (!handleSwitch()) {
-      if (!countdown.isFinished()) {
-        if (fingerSwitch.switchHeld() && score >= 100) {
-          Serial.println("STOP");
-          gameEnd = true;
-        }
-        lKnife.update();
-        rKnife.update();
-        countdown.update();
-      } 
+      if (countdown.isFinished()) {
+        Serial.println("FAIL");
+        gameEnd = true;
+      }
+      if (fingerSwitch.switchHeld() && score >= 100) {
+        Serial.println("STOP");
+        gameEnd = true;
+      }
+      lKnife.update();
+      rKnife.update();
+      countdown.update();
+    }
+  } else {
+    if (fingerSwitch.switchHeld()) {
+      initializeGame();
     }
   }
   
