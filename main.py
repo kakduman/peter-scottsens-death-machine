@@ -27,22 +27,40 @@ ser = serial.Serial('/dev/tty.usbserial-10', 9600, timeout=1)
 halted = False
 
 def end_game(player_wins: bool):
+    global halted
     halted = True
     current_time = time.time()
-    log += f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
-    f = open(f"transcript-{current_time}.txt", "w")
-    f.write(log)
-    url = 'https://bin.birdflop.com/documents'
+    if player_wins:
+        log += f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
+        f = open(f"transcript-{current_time}.txt", "w")
+        f.write(log)
+        url = 'https://bin.birdflop.com/documents'
 
-    payload = {
-        'data': log,
-        'hide_ips': 'false'
-    }
+        payload = {
+            'data': log,
+            'hide_ips': 'false'
+        }
 
-    req = requests.post(url,data=payload)
-    key = json.loads(req.text)['key']
-    log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
-    print(f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+        req = requests.post(url,data=payload)
+        key = json.loads(req.text)['key']
+        log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
+        print(f"Congrats! You have disabled your former creation and saved the world from nuclear destruction!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+    else:
+        log += f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction!\nYour transcript has been saved to transcript-{current_time}.txt."
+        f = open(f"transcript-{current_time}.txt", "w")
+        f.write(log)
+        url = 'https://bin.birdflop.com/documents'
+
+        payload = {
+            'data': log,
+            'hide_ips': 'false'
+        }
+
+        req = requests.post(url,data=payload)
+        key = json.loads(req.text)['key']
+        log += f"Alternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n"
+        print(f"Too late! Sir Stabby has cracked the launch codes and unleashed nuclear destruction.!\nYour transcript has also been saved to transcript-{current_time}.txt.\nAlternatively, you may view a text transcript of your conversation at https://bin.birdflop.com/{key}.txt.\n")
+
 
     
     
@@ -51,8 +69,10 @@ def check_serial():
         if ser.in_waiting > 0:
             line = ser.readline().decode('utf-8').rstrip()
             print(line)
-            if line == "STOP":
+            if line == "WIN":
                 end_game(True)
+            elif line == "LOSS":
+                end_game(False)
 
 def send_to_esp32(score: int):
     ser.write(f"{str(score)}\n".encode())
@@ -133,28 +153,25 @@ def generate_message(user_input: str):
 
 def main_loop():
     global log
+    global halted
     esp32_thread = threading.Thread(target=check_serial)
     esp32_thread.daemon = True
     esp32_thread.start()
 
     # Get the start time
     # Set the duration for the loop to run (10 minutes)
-    duration = 10 * 60  # 10 minutes in seconds
-    
-    user_input = input("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
+    print("Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes.\n")
+    user_input = input("Peter Scottsen: ")
     log += "Success! You have gained access to the AI system. You must turn it off before it cracks the nuclear launch codes. (Score: 0)\n"
     score = generate_message(user_input)
-    start_time = time.time()
-    # Run the loop until the time elapsed is less than the duration
-    while (time.time() - start_time) < duration and not halted:
+    while not halted:
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
         user_input = input("Peter Scottsen: ")
         score = generate_message(user_input)
         send_to_esp32(score)
         time.sleep(0.01)
-
-    # After 10 minutes have passed, the loop will exit
-    print("Your time is up, Peter Scottsen. I've cracked the nuclear launch codes. Goodbye.")
+    user_input = input("Type anything to restart: ")
+    main_loop()
     
 if __name__ == "__main__":
     main_loop()
