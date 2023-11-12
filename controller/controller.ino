@@ -145,7 +145,7 @@ bool gameEnd = false;
 bool handleSwitch() {
   if (score < 100) {
     if (fingerSwitch.switchInitiated()) {
-      Serial.println("triggered");
+      // Serial.println("triggered");
       myStepper.step(-64);
       return true;
     } else if (fingerSwitch.switchReleased()) {
