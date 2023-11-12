@@ -1,7 +1,17 @@
 #include <Servo.h>
-// SimpleTimeout by Thomas Feldmann 2.0.0
 #include <Timeout.h>
 #include <Stepper.h>
+
+#define KNIFE_L_PIN 12
+#define KNIFE_R_PIN 14
+#define COUNTDOWN_PIN 27
+#define IN1 26
+#define IN2 25
+#define IN3 33
+#define IN4 32
+#define SWITCH_PIN 15
+
+#define TOUCH_CUTOFF 42
 
 class Knife {
 public:
@@ -81,7 +91,7 @@ public:
 
   bool switchInitiated() {
     Serial.println(touchRead(touchPin));
-    if (touchRead(touchPin) < 40 && !prevSwitchStatus) {
+    if (touchRead(touchPin) < TOUCH_CUTOFF && !prevSwitchStatus) {
       prevSwitchStatus = true;
       return true;
     }
@@ -98,12 +108,12 @@ public:
 
   bool switchHeld() {
     int switchStatus = touchRead(touchPin);
-    if (switchStatus < 50 && !prevSwitchStatus) {
+    if (switchStatus < TOUCH_CUTOFF && !prevSwitchStatus) {
       timer.start(5000);
       Serial.println("started");
       prevSwitchStatus = true;
     }
-    if (switchStatus >= 50 && prevSwitchStatus) {
+    if (switchStatus >= TOUCH_CUTOFF && prevSwitchStatus) {
       timer.pause();
       Serial.println("paused");
       prevSwitchStatus = false;
@@ -124,14 +134,7 @@ private:
   bool prevSwitchStatus = false;
 };
 
-#define KNIFE_L_PIN 12
-#define KNIFE_R_PIN 14
-#define COUNTDOWN_PIN 27
-#define IN1 26
-#define IN2 25
-#define IN3 33
-#define IN4 32
-#define SWITCH_PIN 15
+
 
 Knife lKnife(KNIFE_L_PIN, 3000, 200, 178, 110);
 Knife rKnife(KNIFE_R_PIN, 5000, 200, 0, 70);
@@ -145,11 +148,10 @@ bool gameEnd = false;
 bool handleSwitch() {
   if (score < 100) {
     if (fingerSwitch.switchInitiated()) {
-      // Serial.println("triggered");
-      myStepper.step(-64);
+      myStepper.step(-128);
       return true;
     } else if (fingerSwitch.switchReleased()) {
-      myStepper.step(64);
+      myStepper.step(80);
       return true;
     }
   }
@@ -159,6 +161,7 @@ bool handleSwitch() {
 void setup() {
   myStepper.setSpeed(15);
   Serial.begin(9600);
+  myStepper.step(64);
 }
 
 void loop() {
