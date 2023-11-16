@@ -139,14 +139,14 @@ private:
 Knife lKnife(KNIFE_L_PIN, 3000, 200, 178, 110);
 Knife rKnife(KNIFE_R_PIN, 5000, 200, 0, 70);
 FingerSwitch fingerSwitch(SWITCH_PIN, 3000);
-Countdown countdown(COUNTDOWN_PIN, 20000);
+Countdown countdown(COUNTDOWN_PIN, 300000);
 Stepper myStepper(2048, IN1, IN3, IN2, IN4);
 
-int score = 100;
+int score = 50;
 bool gameEnd = true;
 
 bool handleSwitch() {
-  if (score < 100) {
+  if (score < 50) {
     if (fingerSwitch.switchInitiated()) {
       myStepper.step(-128);
       return true;
@@ -178,7 +178,7 @@ void loop() {
         Serial.println("LOSS");
         gameEnd = true;
       }
-      if (fingerSwitch.switchHeld() && score >= 100) {
+      if (fingerSwitch.switchHeld() && score >= 50) {
         Serial.println("WIN");
         gameEnd = true;
       }
